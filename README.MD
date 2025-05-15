@@ -28,7 +28,7 @@ jobs:
           jira_email: ${{ secrets.JIRA_EMAIL }}
           jira_token: ${{ secrets.JIRA_TOKEN }}
           jira_subdomain: "your-subdomain"
-          jira_project_id: "your-project-id"  # jira project id can be found at https://{your-jira-subdomain}/rest/api/3/project 
+          jira_project: "your-project-id"  # jira project id can be found at https://{your-jira-subdomain}/rest/api/3/project 
           jira_project_key: "your-project-key"
           release_prefix: "your-release-prefix"
 ```
@@ -40,7 +40,7 @@ jobs:
 | `jira_email` | 예 | | Jira 사용자 이메일 |
 | `jira_token` | 예 | | Jira API 토큰 |
 | `jira_subdomain` | 예 | | Jira 서브도메인 e.g. "smartdoctor" |
-| `jira_project_id` | 예 | | Jira 프로젝트 ID |
+| `jira_project` | 예 | | Jira 프로젝트 ID |
 | `jira_project_key` | 예 | | Jira 프로젝트 키 |
 | `release_prefix` | 아니오 | | 릴리스 이름 접두사 |
 | `fallback_tag` | 아니오 | `1.0.0` | 이전 태그가 없을 경우 사용할 대체 태그 |
