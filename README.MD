@@ -42,5 +42,5 @@ jobs:
 | `jira_subdomain` | 예 | | Jira 서브도메인 e.g. "smartdoctor" |
 | `jira_project_id` | 예 | | Jira 프로젝트 ID |
 | `jira_project_key` | 예 | | Jira 프로젝트 키 |
-| `release_prefix` | 아니오 | | 릴리스 이름 접두사 (예: "덴티아이-경기(iOS) ") |
+| `release_prefix` | 아니오 | | 릴리스 이름 접두사 |
 | `fallback_tag` | 아니오 | `1.0.0` | 이전 태그가 없을 경우 사용할 대체 태그 |
