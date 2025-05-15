@@ -15,7 +15,7 @@ inputs:
   jira_project:
     description: 'Jira project ID'
     required: true
-  project_key:
+  jira_project_key:
     description: 'Key for the Jira project'
     required: true
   release_prefix:
@@ -75,7 +75,7 @@ runs:
         echo "Release name: $RELEASE_NAME"
         
         # Filter commit messages and get Jira Ticket numbers
-        PROJECT_KEY="${{ inputs.project_key }}"
+        PROJECT_KEY="${{ inputs.jira_project_key }}"
         KEY_UPPER=$(echo "$PROJECT_KEY" | tr '[:lower:]' '[:upper:]')
         KEY_LOWER=$(echo "$PROJECT_KEY" | tr '[:upper:]' '[:lower:]')
         FILTERED_COMMIT_MESSAGE=$(git log --pretty=format:"%s" $PREVIOUS_VERSION..$version | grep -Ei "${KEY_LOWER}-[0-9]+|${KEY_UPPER} [0-9]+" || true)
