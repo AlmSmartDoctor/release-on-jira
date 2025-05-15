@@ -77,14 +77,13 @@ runs:
         # Filter commit messages and get Jira Ticket numbers
         PROJECT_KEY="${{ inputs.jira_project_key }}"
         KEY_UPPER=$(echo "$PROJECT_KEY" | tr '[:lower:]' '[:upper:]')
-        KEY_LOWER=$(echo "$PROJECT_KEY" | tr '[:upper:]' '[:lower:]')
-        FILTERED_COMMIT_MESSAGE=$(git log --pretty=format:"%s" $PREVIOUS_VERSION..$version | grep -Ei "${KEY_LOWER}-[0-9]+|${KEY_UPPER} [0-9]+" || true)
+        
+        FILTERED_COMMIT_MESSAGE=$(git log --pretty=format:"%s" $PREVIOUS_VERSION..$version | grep -Ei "${KEY_UPPER}[-[:space:]][0-9]+" || true)
         
         echo "Filtered commit messages:"
         echo "$FILTERED_COMMIT_MESSAGE"
         
-        COMMIT_MESSAGE=$(echo "$FILTERED_COMMIT_MESSAGE" | sed -E 's/.+:/-/g' | sed 's/$/\\n/' | tr -d '\n' | tr -d '\b')
-        TICKET_NUMBERS=$(echo "$FILTERED_COMMIT_MESSAGE" | grep -oEi "${KEY_UPPER} [0-9]+" | sed -E "s/${KEY_LOWER} ([0-9]+)/${KEY_UPPER}-\1/i" || true)
+        TICKET_NUMBERS=$(echo "$FILTERED_COMMIT_MESSAGE" | grep -oEi "${KEY_UPPER}[-[:space:]][0-9]+" | sed -E "s/${KEY_UPPER}[-[:space:]]+([0-9]+)/${KEY_UPPER}-\1/i" || true)
         JIRA_TICKETS=$(echo "$TICKET_NUMBERS" | sort -u | paste -sd "," -)
         
         echo "Extracted JIRA tickets: $JIRA_TICKETS"
