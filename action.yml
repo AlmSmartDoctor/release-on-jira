@@ -1,0 +1,105 @@
+name: 'jira-release-on-git-tag'
+description: 'Creates a Jira release with linked tickets when a Git tag is pushed'
+author: 'Minhu Park'
+
+inputs:
+  jira_email:
+    description: 'Jira user email'
+    required: true
+  jira_token:
+    description: 'Jira API token'
+    required: true
+  jira_subdomain:
+    description: 'Jira subdomain'
+    required: true
+  jira_project:
+    description: 'Jira project ID'
+    required: true
+  project_key:
+    description: 'Key for the Jira project'
+    required: true
+  release_prefix:
+    description: 'Prefix for the release name'
+    required: false
+    default: ''
+  fallback_tag:
+    description: 'Fallback tag if no previous tag is found'
+    required: false
+    default: '1.0.0'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: "0"
+    
+    - name: Delete Latest Tag
+      shell: bash
+      run: |
+        git fetch --tags origin "+refs/tags/*:refs/tags/*"
+        git tag -d ${GITHUB_REF_NAME}
+        
+    - name: 'Get Previous tag'
+      id: previoustag
+      uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      with:
+        fallback: ${{ inputs.fallback_tag }}
+        
+    - name: Re-fetch current tag
+      shell: bash
+      run: |
+        git fetch origin tag ${GITHUB_REF_NAME}
+        
+    - name: Extract Jira Tickets
+      shell: bash
+      run: |
+        # Current version is directly from tag (e.g., 1.2.3)
+        version=${GITHUB_REF_NAME}
+        
+        # Validate version format
+        if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Error: The tag name does not follow the expected format (x.x.x)"
+          exit 1
+        fi
+        
+        PREVIOUS_VERSION="${{ steps.previoustag.outputs.tag }}"
+        
+        # Format Jira release name
+        RELEASE_NAME="${{ inputs.release_prefix }}$version"
+        echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+        
+        echo "Current version: $version"
+        echo "Previous version: $PREVIOUS_VERSION"
+        echo "Release name: $RELEASE_NAME"
+        
+        # Filter commit messages and get Jira Ticket numbers
+        PROJECT_KEY="${{ inputs.project_key }}"
+        KEY_UPPER=$(echo "$PROJECT_KEY" | tr '[:lower:]' '[:upper:]')
+        KEY_LOWER=$(echo "$PROJECT_KEY" | tr '[:upper:]' '[:lower:]')
+        FILTERED_COMMIT_MESSAGE=$(git log --pretty=format:"%s" $PREVIOUS_VERSION..$version | grep -Ei "${KEY_LOWER}-[0-9]+|${KEY_UPPER} [0-9]+" || true)
+        
+        echo "Filtered commit messages:"
+        echo "$FILTERED_COMMIT_MESSAGE"
+        
+        COMMIT_MESSAGE=$(echo "$FILTERED_COMMIT_MESSAGE" | sed -E 's/.+:/-/g' | sed 's/$/\\n/' | tr -d '\n' | tr -d '\b')
+        TICKET_NUMBERS=$(echo "$FILTERED_COMMIT_MESSAGE" | grep -oEi "${KEY_UPPER} [0-9]+" | sed -E "s/${KEY_LOWER} ([0-9]+)/${KEY_UPPER}-\1/i" || true)
+        JIRA_TICKETS=$(echo "$TICKET_NUMBERS" | sort -u | paste -sd "," -)
+        
+        echo "Extracted JIRA tickets: $JIRA_TICKETS"
+        
+        # Save extracted jira tickets to github env
+        echo "JIRA_TICKETS=$JIRA_TICKETS" >> $GITHUB_ENV
+        
+    - name: Create Jira Release
+      uses: charpi/jira-release-actions@v1.0.2
+      with:
+        email: ${{ inputs.jira_email }}
+        api_token: ${{ inputs.jira_token }}
+        subdomain: ${{ inputs.jira_subdomain }}
+        jira_project: ${{ inputs.jira_project }}
+        release_name: ${{ env.RELEASE_NAME }}
+        create: true
+        tickets: ${{ env.JIRA_TICKETS }}
+        
