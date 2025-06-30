@@ -58,12 +58,6 @@ runs:
         # Current version is directly from tag (e.g., 1.2.3)
         version=${GITHUB_REF_NAME}
         
-        # Validate version format
-        if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "Error: The tag name does not follow the expected format (x.x.x)"
-          exit 1
-        fi
-        
         PREVIOUS_VERSION="${{ steps.previoustag.outputs.tag }}"
         
         # Format Jira release name
