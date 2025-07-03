@@ -26,6 +26,10 @@ inputs:
     description: 'Fallback tag if no previous tag is found'
     required: false
     default: '1.0.0'
+  tag_prefix:
+    description: 'Prefix for the tag'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -46,6 +50,7 @@ runs:
       uses: "WyriHaximus/github-action-get-previous-tag@v1"
       with:
         fallback: ${{ inputs.fallback_tag }}
+        prefix: ${{inputs.tag_prefix}}
         
     - name: Re-fetch current tag
       shell: bash
